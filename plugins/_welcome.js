@@ -32,7 +32,6 @@ END:VCARD`
     }
   }
 
-  // 📸 Foto real del usuario
   let profile
   try {
     profile = await conn.profilePictureUrl(who, 'image')
@@ -73,7 +72,6 @@ END:VCARD`
 
         footer: `© Welcome to the group`,
 
-        // 🔘 BOTÓN REGISTRO
         interactiveButtons: [
           {
             name: 'quick_reply',
