@@ -23,10 +23,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/El-brayan502/NagiBotV3.git"
+    "url": "git+https://github.com/El-brayan502/megumi-fushiguro-bot.git"
   },
   "bugs": {
-    "url": "https://github.com/El-brayan502/NagiBotV3/issues"
+    "url": "https://github.com/El-brayan502/megumi-fushiguro-bot/issues"
   },
   "license": "MIT-License",
   "dependencies": {
