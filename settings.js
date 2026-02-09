@@ -15,7 +15,7 @@ global.mods = []
 global.prems = []
 global.suittag = ['50231458537']
 
-global.botname = '𝙽𝚊𝚐𝚒𝙱𝚘𝚝-𝙰𝚒'
+global.botname = 'Mᴇɢᴜɪᴍɪ Fᴜsʜɪɢᴜʀᴏ'
 global.author = 'Brayan330'
 global.sticker = 'sticker created by megumi'
 
