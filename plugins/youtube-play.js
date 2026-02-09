@@ -80,7 +80,6 @@ let handler = async (m, { conn, args }) => {
 
     const video = search.videos[0]
 
-    // 📸 MENSAJE CON IMAGEN + INFO
     await conn.sendMessage(
       m.chat,
       {
