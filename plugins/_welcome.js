@@ -6,7 +6,7 @@ export async function before(m, { conn, usedPrefix }) {
   if (!who) return
 
   const taguser = `@${who.split('@')[0]}`
-  const botname = 'Nagi Bot'
+  const botname = global.author
 
   const metadata = await conn.groupMetadata(m.chat)
   const totalMembers = metadata.participants.length
