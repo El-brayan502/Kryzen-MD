@@ -1,4 +1,5 @@
-export async function before(m, { conn }) {
+
+export async function before(m, { conn, usedPrefix }) {
   if (!m.isGroup) return
   if (!m.messageStubType) return
 
@@ -7,6 +8,27 @@ export async function before(m, { conn }) {
 
   const taguser = `@${who.split('@')[0]}`
   const botname = 'Nagi Bot'
+
+  // 📌 FKONTAK
+  const fkontak = {
+    key: {
+      participants: '0@s.whatsapp.net',
+      remoteJid: 'status@broadcast',
+      fromMe: false,
+      id: 'NagiBot'
+    },
+    message: {
+      contactMessage: {
+        displayName: botname,
+        vcard: `BEGIN:VCARD
+VERSION:3.0
+FN:${botname}
+ORG:${botname};
+TEL;type=CELL;type=VOICE;waid=0:+0
+END:VCARD`
+      }
+    }
+  }
 
   // 📸 Foto real del usuario
   let profile
@@ -25,43 +47,47 @@ export async function before(m, { conn }) {
       `&profile=${encodeURIComponent(profile)}` +
       '&background=https%3A%2F%2Fraw.githubusercontent.com%2FEl-brayan502%2Fimg%2Fupload%2Fuploads%2F837853-1770608354526.jpg'
 
-    await conn.sendMessage(m.chat, {
-      product: {
-        productImage: { url: welcomeImg },
-        productId: 'welcome-001',
-        title: `👋 Bienvenido a ${botname}`,
-        currencyCode: 'USD',
-        priceAmount1000: '0',
-        retailerId: 1677,
-        productImageCount: 1
-      },
+    await conn.sendMessage(
+      m.chat,
+      {
+        product: {
+          productImage: { url: welcomeImg },
+          productId: 'welcome-001',
+          title: `👋 Bienvenido a ${botname}`,
+          currencyCode: 'USD',
+          priceAmount1000: '0',
+          retailerId: 1677,
+          productImageCount: 1
+        },
 
-      businessOwnerJid: '0@s.whatsapp.net',
+        businessOwnerJid: '0@s.whatsapp.net',
 
-      caption: `
+        caption: `
 ✨ *Bienvenido/a al grupo* ✨
 
 👤 Usuario: ${taguser}
 
 📌 Para usar los comandos del bot
-regístrate primero.
+debes registrarte primero.
 `.trim(),
 
-      footer: `© ${botname} · Welcome`,
+        footer: `© ${botname} · Welcome`,
 
-      // 🔘 BOTÓN COMO TU MENÚ
-      interactiveButtons: [
-        {
-          name: 'cta_url',
-          buttonParamsJson: JSON.stringify({
-            display_text: '📢 Canal WhatsApp',
-            url: 'https://whatsapp.com/channel/0029Vb6BDQc0lwgsDN1GJ31i'
-          })
-        }
-      ],
+        // 🔘 BOTÓN QUICK_REPLY
+        interactiveButtons: [
+          {
+            name: 'quick_reply',
+            buttonParamsJson: JSON.stringify({
+              display_text: '👤 Registrarme',
+              id: `${usedPrefix}reg user.19`
+            })
+          }
+        ],
 
-      mentions: [who]
-    })
+        mentions: [who]
+      },
+      { quoted: fkontak }
+    )
   }
 
   // ===== GOODBYE =====
@@ -73,38 +99,42 @@ regístrate primero.
       `&profile=${encodeURIComponent(profile)}` +
       '&background=https%3A%2F%2Fraw.githubusercontent.com%2FEl-brayan502%2Fimg%2Fupload%2Fuploads%2Ff1daa4-1770608515673.jpg'
 
-    await conn.sendMessage(m.chat, {
-      product: {
-        productImage: { url: goodbyeImg },
-        productId: 'goodbye-001',
-        title: '👋 Hasta luego',
-        currencyCode: 'USD',
-        priceAmount1000: '0',
-        retailerId: 1677,
-        productImageCount: 1
-      },
+    await conn.sendMessage(
+      m.chat,
+      {
+        product: {
+          productImage: { url: goodbyeImg },
+          productId: 'goodbye-001',
+          title: '👋 Hasta luego',
+          currencyCode: 'USD',
+          priceAmount1000: '0',
+          retailerId: 1677,
+          productImageCount: 1
+        },
 
-      businessOwnerJid: '0@s.whatsapp.net',
+        businessOwnerJid: '0@s.whatsapp.net',
 
-      caption: `
+        caption: `
 👤 Usuario: ${taguser}
 salió del grupo.
 `.trim(),
 
-      footer: `© ${botname} · Goodbye`,
+        footer: `© ${botname} · Goodbye`,
 
-      // 🔘 BOTÓN TAMBIÉN AQUÍ
-      interactiveButtons: [
-        {
-          name: 'cta_url',
-          buttonParamsJson: JSON.stringify({
-            display_text: '📢 Canal WhatsApp',
-            url: 'https://whatsapp.com/channel/0029Vb6BDQc0lwgsDN1GJ31i'
-          })
-        }
-      ],
+        // 🔘 BOTÓN TAMBIÉN AQUÍ
+        interactiveButtons: [
+          {
+            name: 'quick_reply',
+            buttonParamsJson: JSON.stringify({
+              display_text: '📋 Menú',
+              id: `${usedPrefix}menu`
+            })
+          }
+        ],
 
-      mentions: [who]
-    })
+        mentions: [who]
+      },
+      { quoted: fkontak }
+    )
   }
 }
