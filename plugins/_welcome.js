@@ -54,7 +54,7 @@ END:VCARD`
         product: {
           productImage: { url: welcomeImg },
           productId: 'welcome-001',
-          title: `👋 Bienvenido a ${botname}`,
+          title: `─ W E L C O M E ─🥷🏻`,
           currencyCode: 'USD',
           priceAmount1000: '0',
           retailerId: 1677,
@@ -104,7 +104,7 @@ END:VCARD`
         product: {
           productImage: { url: goodbyeImg },
           productId: 'goodbye-001',
-          title: '👋 Hasta luego',
+          title: '─Ａ Ｄ Ｉ Ō S─👋🏻',
           currencyCode: 'USD',
           priceAmount1000: '0',
           retailerId: 1677,
