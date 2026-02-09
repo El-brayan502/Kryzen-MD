@@ -10,7 +10,7 @@ let handler = async (m, { conn, usedPrefix }) => {
     product: {
       productImage: { url: file },
       productId: '24529689176623820',
-      title: botname,
+      title: global.botname,
       description: '',
       currencyCode: 'USD',
       priceAmount1000: '0',
