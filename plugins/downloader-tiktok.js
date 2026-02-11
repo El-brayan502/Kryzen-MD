@@ -1,27 +1,35 @@
 import fetch from 'node-fetch'
 
 let handler = async (m, { conn, args }) => {
-  if (!args[0]) {
-    return m.reply('📌 Usa: .tiktok <link>')
-  }
-
   try {
+    const text = args[0] || m.text
+    const url = text?.match(/https?:\/\/(www\.)?(vt\.)?tiktok\.com\/\S+/i)?.[0]
+
+    if (!url) {
+      return conn.reply(
+        m.chat,
+        '📌 Usa: *.tt <link de TikTok>*',
+        m,
+        global.rcanal
+      )
+    }
+
     await m.react('⏳')
 
-    const api = `https://neji-api.vercel.app/api/downloader/tiktok?url=${encodeURIComponent(args[0])}`
+    const api = `https://neji-api.vercel.app/api/downloader/tiktok?url=${encodeURIComponent(url)}`
     const res = await fetch(api)
     const json = await res.json()
 
-    if (!json.status) throw 'No se pudo descargar'
+    if (!json?.status) throw 'Error API'
 
     const data = json.result
     const videoUrl = data.cover.play
 
-    // ⬇️ Descargar video a buffer (FIX)
+    // ⚡ descarga directa a buffer (rápido)
     const videoRes = await fetch(videoUrl)
     const buffer = Buffer.from(await videoRes.arrayBuffer())
 
-    // 📩 Mensaje informativo
+    // 📩 info
     await conn.sendMessage(
       m.chat,
       {
@@ -32,12 +40,12 @@ let handler = async (m, { conn, args }) => {
 ⏱ Duración: ${data.cover.duration}s
 🎧 Música: ${data.music.title}
 
-> Preparando tu descarga...`
+⏬ Descargando...`
       },
       { quoted: m }
     )
 
-    // 🎬 Enviar video
+    // 🎬 video
     await conn.sendMessage(
       m.chat,
       {
@@ -52,11 +60,12 @@ let handler = async (m, { conn, args }) => {
 
   } catch (e) {
     console.error(e)
-    m.reply('❌ Error al procesar el TikTok')
+    await m.react('❌')
+    conn.reply(m.chat, '❌ Error al descargar el TikTok', m, global.rcanal)
   }
 }
 
-handler.help = ['tiktok <url>']
+handler.help = ['tt <url>']
 handler.tags = ['dl']
 handler.command = ['tiktok', 'tt']
 
