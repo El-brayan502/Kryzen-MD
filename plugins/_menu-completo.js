@@ -44,13 +44,13 @@ let handler = async (m, { conn, usedPrefix }) => {
 
 \`${botname}\` sistema automatizado para comandos y utilidades.
 
-> *Usuario* ┆ ${taguser}
-> *Hora* ┆ ${hora}
-> *Fecha* ┆ ${fecha}
+*Usuario* ┆ ${taguser}
+*Hora* ┆ ${hora}
+*Fecha* ┆ ${fecha}
 
-> *Bot activo* ┆ ${uptime}
-> *Usuarios* ┆ ${totalUsers}
-> *Grupos* ┆ ${groupsCount}
+*Bot activo* ┆ ${uptime}
+*Usuarios* ┆ ${totalUsers}
+*Grupos* ┆ ${groupsCount}
 `.trim()
 
   for (let tag of categorias) {
