@@ -37,7 +37,7 @@ export async function handler(chatUpdate) {
         const chat = global.db.data.chats[m.chat]
         const settings = global.db.data.settings[botJid]
 
-        if (typeof m.text !== "string") m.text = ""
+        m.text = extractText(m)
 
         updateUserName(this, m, user)
 
