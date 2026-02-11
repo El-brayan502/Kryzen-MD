@@ -118,7 +118,7 @@ Vistas : ${video.views.toLocaleString()}
 }
 
 handler.help = ['play <texto>']
-handler.tags = ['music']
+handler.tags = ['youtube]
 handler.command = ['play', 'p']
 
 export default handler
