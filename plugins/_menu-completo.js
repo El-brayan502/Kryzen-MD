@@ -9,9 +9,9 @@ let handler = async (m, { conn, usedPrefix }) => {
   const fecha = moment.tz(zona).format('DD/MM/YYYY')
   const hora = moment.tz(zona).format('HH:mm:ss')
 
-  let user = global.db.data.users[who]
+  let user = global.db.data.users[who] || {}
   let nombre = await conn.getName(who)
-  let limite = user?.limit ?? 0
+  let limite = user.limit ?? 0
   let totalUsers = Object.keys(global.db.data.users).length
   let groupsCount = Object.values(conn.chats).filter(v => v.id.endsWith('@g.us')).length
   let uptime = clockString(process.uptime())
@@ -23,11 +23,11 @@ let handler = async (m, { conn, usedPrefix }) => {
     return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':')
   }
 
-  const stylize = s => s.toLowerCase().replace(/[a-z]/g, c => ({
-    a:'ᴀ', b:'ʙ', c:'ᴄ', d:'ᴅ', e:'ᴇ', f:'ꜰ', g:'ɢ',
-    h:'ʜ', i:'ɪ', j:'ᴊ', k:'ᴋ', l:'ʟ', m:'ᴍ', n:'ɴ',
-    o:'ᴏ', p:'ᴘ', q:'ǫ', r:'ʀ', s:'ꜱ', t:'ᴛ', u:'ᴜ',
-    v:'ᴠ', w:'ᴡ', x:'x', y:'ʏ', z:'ᴢ'
+  const stylize = s => s.toUpperCase().replace(/[A-Z]/g, c => ({
+    A:'𝐀', B:'𝐁', C:'𝐂', D:'𝐃', E:'𝐄', F:'𝐅', G:'𝐆',
+    H:'𝐇', I:'𝐈', J:'𝐉', K:'𝐊', L:'𝐋', M:'𝐌', N:'𝐍',
+    O:'𝐎', P:'𝐏', Q:'𝐐', R:'𝐑', S:'𝐒', T:'𝐓', U:'𝐔',
+    V:'𝐕', W:'𝐖', X:'𝐗', Y:'𝐘', Z:'𝐙'
   }[c] || c))
 
   let plugins = Object.values(global.plugins)
@@ -42,7 +42,7 @@ let handler = async (m, { conn, usedPrefix }) => {
   let caption = `
 *Hola ${nombre}*
 
-\`${botname}\` sistema automatizado para comandos, descargas y utilidades.
+\`${botname}\` sistema automatizado para comandos y utilidades.
 
 > *Usuario* ┆ ${taguser}
 > *Hora* ┆ ${hora}
@@ -57,16 +57,16 @@ let handler = async (m, { conn, usedPrefix }) => {
     let comandos = plugins
       .filter(p => p.tags.includes(tag))
       .flatMap(p => p.help)
-      .map(cmd => `│  ◦ ${usedPrefix}${cmd}`)
+      .map(cmd => `> ・ ${usedPrefix}${cmd}`)
       .join('\n')
 
     if (!comandos) continue
 
     caption += `
 
-*– ᴍᴇɴᴜ ${stylize(tag)}*
-${comandos}
-└──`
+> 〢${stylize(tag)} ✿︎
+
+${comandos}`
   }
 
   const file = 'https://raw.githubusercontent.com/El-brayan502/img/upload/uploads/ca4a01-1770600773657.jpg'
