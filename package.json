@@ -33,7 +33,7 @@
     "@bochilteam/scraper": "^4.2.4",
     "@distube/ytdl-core": "^4.16.12",
     "@vitalets/google-translate-api": "^8.0.0",
-    "@whiskeysockets/baileys": "github:gatanina-li/baileys",
+    "@whiskeysockets/baileys": "npm:wileys",
     "acrcloud": "^1.4.0",
     "awesome-phonenumber": "^3.4.0",
     "axios": "^1.1.2",
