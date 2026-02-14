@@ -10,14 +10,14 @@ handler.all = async function (m, { conn }) {
     global.iconorcanal = 'https://cdn.yupra.my.id/yp/w6a6j1og.jpg'
 
     global.idcanal = '120363417186717632@newsletter' 
-    global.nombrecanal = '🐺 megumi fushiguro'
+    global.nombrecanal = 'Kryzen-MD ⭐️'
 
     global.rcanal = {
       contextInfo: {
         isForwarded: true,
         forwardedNewsletterMessageInfo: { newsletterJid: idcanal, serverMessageId: 100, newsletterName: nombrecanal },
         externalAdReply: {
-          title: '🎯 fushiguro Updates',
+          title: '🎯 Kryzen-MD Updates',
           thumbnailUrl: 'https://chat.whatsapp.com/KAhwtBdTOYlFsbsU8rwo79',
           thumbnail: await (await fetch(global.iconorcanal)).buffer(),
           mediaType: 1,
