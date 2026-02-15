@@ -3,19 +3,12 @@ import path from 'path'
 
 let handler = async (m, { conn, usedPrefix }) => {
     let who = m.mentionedJid.length > 0 ? m.mentionedJid[0] : (m.quoted ? m.quoted.sender : m.sender)
-
-    who = conn.decodeJid(who) 
-    let sender = conn.decodeJid(m.sender)
-
     let name = conn.getName(who)
-    let name2 = conn.getName(sender)
+    let name2 = conn.getName(m.sender)
 
-    let displayName = name.includes('@') ? name.split('@')[0] : name
-    let displayName2 = name2.includes('@') ? name2.split('@')[0] : name2
-
-    let str = (m.mentionedJid.length > 0 || m.quoted) 
-        ? `\`${displayName2}\` beso a \`${displayName}\` ( ˘ ³˘)♥` 
-        : `\`${displayName2}\` se besó a sí mismo/a ( ˘ ³˘)♥`
+    let str = m.mentionedJid.length > 0 || m.quoted 
+        ? `\`${name2}\` beso a \`${name || who}\` ( ˘ ³˘)♥` 
+        : `\`${name2}\` se besó a sí mismo/a ( ˘ ³˘)♥`
 
     if (m.isGroup) {
         let pp = 'https://media.tenor.com/_8oadF3hZwIAAAPo/kiss.mp4'
@@ -30,12 +23,7 @@ let handler = async (m, { conn, usedPrefix }) => {
         const videos = [pp, pp2, pp3, pp4, pp5, pp6, pp7, pp8]
         const video = videos[Math.floor(Math.random() * videos.length)]
 
-        conn.sendMessage(m.chat, { 
-            video: { url: video }, 
-            gifPlayback: true, 
-            caption: str, 
-            mentions: [who, sender] 
-        }, { quoted: m })
+        conn.sendMessage(m.chat, { video: { url: video }, gifPlayback: true, caption: str, ptt: true, mentions: [who] }, { quoted: m })
     }
 }
 
