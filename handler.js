@@ -7,17 +7,9 @@ import chalk from "chalk"
 import fetch from "node-fetch"
 import ws from "ws"
 
-const toNum = v => (v + '').replace(/[^0-9]/g, '')
-const normalizeCore = v => toNum((v + '').split('@')[0])
-const decodeJidCompat = (jid = '') => { 
-    if (!jid) return jid
-    if (/:[0-9A-Fa-f]+@/.test(jid)) { 
-        const [user, server] = jid.split('@')
-        return user.split(':')[0] + '@' + server 
-    } 
-    return jid 
-}
-
+/**
+ * @type {import('@whiskeysockets/baileys')}
+ */
 const { proto } = (await import("@whiskeysockets/baileys")).default
 const isNumber = x => typeof x === "number" && !isNaN(x)
 const delay = ms => isNumber(ms) && new Promise(resolve => setTimeout(() => { clearTimeout(this); resolve() }, ms))
@@ -38,15 +30,8 @@ export async function handler(chatUpdate) {
         if (!m) return
         m.exp = 0
 
-        const senderRaw = m.sender || ''
-        const senderCanonical = decodeJidCompat(senderRaw)
-        if (senderCanonical !== m.sender) {
-            m.realSender = m.sender
-            m.sender = senderCanonical
-        }
-
-        const botJid = this.decodeJid(this.user.jid)
-        ensureDatabaseSchema.call(this, m, botJid)
+        const botJid = this.user.jid
+        ensureDatabaseSchema(m, botJid)
 
         const user = global.db.data.users[m.sender]
         const chat = global.db.data.chats[m.chat]
@@ -81,10 +66,6 @@ export async function handler(chatUpdate) {
 
         const groupData = await getGroupMetadata(this, m)
         const { participants, groupMetadata, userGroup, botGroup, isRAdmin, isAdmin, isBotAdmin } = groupData
-
-        if (m.mentionedJid) {
-            m.mentionedJid = m.mentionedJid.map(jid => this.decodeJid(jid))
-        }
 
         const extraContext = {
             conn: this, match: null, usedPrefix: null, noPrefix: null, _args: [], args: [], 
@@ -172,10 +153,11 @@ export async function handler(chatUpdate) {
     }
 }
 
+
 function ensureDatabaseSchema(m, botJid) {
-    const sender = this.decodeJid(m.sender)
-    if (typeof global.db.data.users[sender] !== "object") global.db.data.users[sender] = {}
-    const user = global.db.data.users[sender]
+
+    if (typeof global.db.data.users[m.sender] !== "object") global.db.data.users[m.sender] = {}
+    const user = global.db.data.users[m.sender]
     const userDefault = {
         name: m.name, exp: 0, cebollines: 0, bank: 0, level: 0, health: 100, genre: "", 
         birth: "", marry: "", description: "", packstickers: null, premium: false, 
@@ -204,13 +186,12 @@ function ensureDatabaseSchema(m, botJid) {
 function getPermissions(conn, m, user) {
     const owners = global.owner.map(n => Array.isArray(n) ? n[0] : n)
         .filter(v => typeof v === "string")
-        .map(v => normalizeCore(v))
+        .map(v => v.replace(/[^0-9]/g, ""))
 
-    const senderNum = normalizeCore(m.sender)
-    const isROwner = owners.includes(senderNum)
+    const isROwner = owners.flatMap(v => [`${v}@s.whatsapp.net`, `${v}@lid`]).includes(m.sender)
     const isOwner = isROwner || m.fromMe
-    const isPrems = isROwner || user.premium || global.prems.some(v => normalizeCore(v) === senderNum)
-    const isOwners = [normalizeCore(conn.user.jid), ...owners].includes(senderNum)
+    const isPrems = isROwner || user.premium || global.prems.some(v => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net" === m.sender)
+    const isOwners = [conn.user.jid, ...owners.map(v => `${v}@s.whatsapp.net`)].includes(m.sender)
 
     return { isROwner, isOwner, isPrems, isOwners }
 }
@@ -218,18 +199,12 @@ function getPermissions(conn, m, user) {
 async function getGroupMetadata(conn, m) {
     if (!m.isGroup) return { participants: [], groupMetadata: {}, userGroup: {}, botGroup: {}, isRAdmin: false, isAdmin: false, isBotAdmin: false }
     
-    const metadata = await conn.groupMetadata(m.chat).catch(() => ({}))
-    const participants = (metadata.participants || []).map(p => ({ 
-        ...p, 
-        id: conn.decodeJid(p.id), 
-        jid: conn.decodeJid(p.id) 
-    }))
+    const chatData = conn.chats[m.chat] || {}
+    const metadata = chatData.metadata || await conn.groupMetadata(m.chat).catch(() => ({}))
+    const participants = (metadata.participants || []).map(p => ({ ...p, id: p.jid, jid: p.jid, lid: p.lid }))
     
-    const sender = conn.decodeJid(m.sender)
-    const botJid = conn.decodeJid(conn.user.jid)
-    
-    const userGroup = participants.find(p => p.id === sender) || {}
-    const botGroup = participants.find(p => p.id === botJid) || {}
+    const userGroup = participants.find(p => conn.decodeJid(p.jid) === m.sender) || {}
+    const botGroup = participants.find(p => conn.decodeJid(p.jid) === conn.user.jid) || {}
     
     return {
         participants,
@@ -237,12 +212,102 @@ async function getGroupMetadata(conn, m) {
         userGroup,
         botGroup,
         isRAdmin: userGroup.admin === "superadmin",
-        isAdmin: !!userGroup.admin,
+        isAdmin: userGroup.admin === "admin" || userGroup.admin === "superadmin",
         isBotAdmin: !!botGroup.admin
     }
 }
 
-// ... (findPrefixMatch, checkCommand, isRestricted, hasCommandPermissions, getFailType, shouldIgnoreMessage, isMultiBotConflict, updateUserName, handleMessageQueue se mantienen de tu código original)
+function findPrefixMatch(text, prefix, strRegex) {
+    const prefixes = Array.isArray(prefix) ? prefix : [prefix]
+    for (let p of prefixes) {
+        const regex = p instanceof RegExp ? p : new RegExp(strRegex(p))
+        const match = regex.exec(text)
+        if (match) return [match, regex]
+    }
+    return null
+}
+
+function checkCommand(plugin, command) {
+    if (plugin.command instanceof RegExp) return plugin.command.test(command)
+    if (Array.isArray(plugin.command)) return plugin.command.some(cmd => cmd instanceof RegExp ? cmd.test(command) : cmd === command)
+    return plugin.command === command
+}
+
+function isRestricted(m, user, chat, isROwner, botId, usedPrefix, pluginName) {
+    if (isROwner) return false
+    
+    // Chat baneado
+    if (pluginName !== "group-banchat.js" && chat.isBanned) {
+        if (!chat.primaryBot || chat.primaryBot === botId) {
+            m.reply(`💙 El bot está desactivado en este grupo.\nUsa *${usedPrefix}bot on* para activar.`)
+            return true
+        }
+    }
+    
+    // Usuario baneado
+    if (user.banned) {
+        m.reply(`🖤 Estás baneado.\n*Razón:* ${user.bannedReason}`)
+        return true
+    }
+    return false
+}
+
+function hasCommandPermissions(plugin, { isROwner, isOwner, isPrems, isBotAdmin, isAdmin, m }) {
+    if (plugin.rowner && !isROwner) return false
+    if (plugin.owner && !isOwner) return false
+    if (plugin.premium && !isPrems) return false
+    if (plugin.group && !m.isGroup) return false
+    if (plugin.botAdmin && !isBotAdmin) return false
+    if (plugin.admin && !isAdmin) return false
+    return true
+}
+
+function getFailType(plugin, { isROwner, isOwner, isPrems, isBotAdmin, isAdmin, m }) {
+    if (plugin.rowner && !isROwner) return "rowner"
+    if (plugin.owner && !isOwner) return "owner"
+    if (plugin.premium && !isPrems) return "premium"
+    if (plugin.group && !m.isGroup) return "group"
+    if (plugin.botAdmin && !isBotAdmin) return "botAdmin"
+    if (plugin.admin && !isAdmin) return "admin"
+    return null
+}
+
+function shouldIgnoreMessage(conn, m, settings, isOwners) {
+    if (m.isBaileys) return true
+    if (settings.self && !isOwners) return true
+    // Ignorar IDs de bots conocidos
+    if (m.id.startsWith("NJX-") || (m.id.startsWith("BAE5") && m.id.length === 16) || (m.id.startsWith("B24E") && m.id.length === 20)) return true
+    return false
+}
+
+function isMultiBotConflict(m, chat) {
+    if (!chat.primaryBot || chat.primaryBot === this.user.jid) return false
+    
+    const primaryBotConn = global.conns?.find(c => c.user.jid === chat.primaryBot && c.ws?.socket?.readyState !== ws.CLOSED)
+    if (primaryBotConn) return true 
+    
+    chat.primaryBot = null 
+    return false
+}
+
+async function updateUserName(conn, m, user) {
+    try {
+        const name = m.pushName || await conn.getName(m.sender)
+        if (name && name.trim() && user.name !== name) user.name = name
+    } catch {}
+}
+
+function handleMessageQueue(m) {
+    const queque = this.msgqueque, time = 5000
+    const previousID = queque[queque.length - 1]
+    queque.push(m.id || m.key.id)
+    const interval = setInterval(async () => {
+        if (queque.indexOf(previousID) === -1) {
+            clearInterval(interval)
+            await delay(time)
+        }
+    }, time)
+}
 
 async function finalizeHandler(m) {
     if (opts["queque"] && m.text) {
@@ -265,14 +330,14 @@ async function finalizeHandler(m) {
 
 global.dfail = (type, m, conn) => {
     const msg = {
-        rowner: `💙 El comando *${global.comando}* solo puede ser usado por los creadores.`,
+        rowner: `💙 El comando *${global.comando}* solo puede ser usado por los creadores del bot.`,
         owner: `💙 El comando *${global.comando}* solo puede ser usado por el dueño.`,
-        premium: `💙 El comando *${global.comando}* solo puede ser usado por usuarios premium.`,
+        premium: `💙 El comando *${global.comando}* solo puede ser usado por los usuarios premium.`,
         group: `💙 El comando *${global.comando}* solo puede ser usado en grupos.`,
-        admin: `💙 El comando *${global.comando}* solo puede ser usado por los administradores.`,
-        botAdmin: `💙 Debo ser administrador para ejecutar este comando.`
+        admin: `💙 El comando *${global.comando}* solo puede ser usado por los administradores del grupo.`,
+        botAdmin: `💙 Para ejecutar el comando *${global.comando}* debo ser administrador del grupo.`
     }[type]
-    if (msg) return conn.reply(m.chat, msg, m).then(_ => m.react('💢'))
+    if (msg) return conn.reply(m.chat, msg, m, global.rcanal).then(_ => m.react('💢'))
 }
 
 let file = global.__filename(import.meta.url, true)
