@@ -1,5 +1,3 @@
-> me gusta el pene 
-
 ![nagi Bot](https://cdn.yupra.my.id/yp/8mocro3k.jpg)
 
 ---
